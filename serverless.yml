@@ -8,8 +8,20 @@ provider:
   name: aws
   runtime: nodejs22.x
   environment:
-    DB_URL: ${env:DB_URL}
+    # DB_URL: ${env:DB_URL}
     DEBUG: ${env:DEBUG, 0}
+  iam:
+    role:
+      name: serverless-ssm-role
+      statements:
+        - Effect: "Allow"
+          Resource: "*"
+          Action:
+            - "ssm:GetParameter"
+            - "ssm:GetParameters"
+            - "ssm:GetParametersByPath"
+            - "ssm:GetParameterHistory"
+            - "ssm:DescribeParameters"
 
 functions:
   api:

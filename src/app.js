@@ -1,33 +1,20 @@
 const serverless = require("serverless-http");
 const express = require("express");
-const AWS = require("aws-sdk");
-const { neon, neonConfig } = require("@neondatabase/serverless");
+const { getDbclient } = require("./db/clients");
 const app = express();
 
-const DB_SSM_PARAM = "/serverless-nodejs-api/prod/database-url"
-const AWS_REGION = "us-east-1"
-const ssm = new AWS.SSM({ region: AWS_REGION })
-
-
-async function dbclient() {
-  neonConfig.fetchConnectionCache = true;
-  const paramStoreData = await ssm.getParameter({
-    Name: DB_SSM_PARAM,
-    WithDecryption: true,
-  }).promise();
-
-  const sql = neon(paramStoreData.Parameter.Value)
-  return sql;
-}
 
 app.get("/", async (req, res, next) => {
 
-  const sql = await dbclient();
-  const results = await sql`select now();`
+  const sql = await getDbclient();
+
+  const now = Date.now()
+  const [dbResultnow] = await sql`select now();`
+  const delta = (dbResultnow.now.getTime() - now) / 1000;
 
   return res.status(200).json({
     message: "Hello from root!",
-    results
+    delta
   });
 });
 
